@@ -4,6 +4,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"myGin/context"
 	"myGin/controller"
 	"myGin/response"
 )
@@ -14,11 +15,11 @@ func Load(r *gin.Engine) {
 
 }
 
-func convert(f func(*gin.Context) *response.Response) gin.HandlerFunc {
+func convert(f func(*context.Context) *response.Response) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
-		resp := f(c)
+		resp := f(&context.Context{Context: c})
 
 		data := resp.GetData()
 
