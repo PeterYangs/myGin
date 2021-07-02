@@ -4,37 +4,23 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"myGin/context"
 	"myGin/controller"
-	"myGin/response"
 )
 
 func Load(r *gin.Engine) {
 
-	r.GET("/", convert(controller.Index))
+	router := newRouter(r)
 
-}
+	router.Group("/api", func(api group) {
 
-func convert(f func(*context.Context) *response.Response) gin.HandlerFunc {
+		api.Group("/user", func(user group) {
 
-	return func(c *gin.Context) {
+			user.Registered(GET, "/info", controller.Index)
+			user.Registered(GET, "/order", controller.Index)
+			user.Registered(GET, "/money", controller.Index)
 
-		resp := f(&context.Context{Context: c})
+		})
 
-		data := resp.GetData()
-
-		switch item := data.(type) {
-
-		case string:
-
-			c.String(200, item)
-
-		case gin.H:
-
-			c.JSON(200, item)
-
-		}
-
-	}
+	})
 
 }
