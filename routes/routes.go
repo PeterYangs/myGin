@@ -5,11 +5,10 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"myGin/controller"
+	"myGin/kernel"
 )
 
-func Load(r *gin.Engine) {
-
-	router := newRouter(r)
+func config(router group) {
 
 	router.Group("/api", func(api group) {
 
@@ -22,5 +21,17 @@ func Load(r *gin.Engine) {
 		})
 
 	})
+
+}
+
+func Load(r *gin.Engine) {
+
+	router := newRouter(r)
+
+	router.Group("", func(g group) {
+
+		config(g)
+
+	}, kernel.Middleware...) //加载全局中间件
 
 }

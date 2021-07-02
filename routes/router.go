@@ -13,8 +13,9 @@ type router struct {
 }
 
 type group struct {
-	engine *gin.Engine
-	path   string
+	engine      *gin.Engine
+	path        string
+	middlewares []context.HandlerFunc
 }
 
 type method int
@@ -34,25 +35,47 @@ func newRouter(engine *gin.Engine) *router {
 	}
 }
 
-func (r *router) Group(path string, callback func(group)) {
+func (r *router) Group(path string, callback func(group), middlewares ...context.HandlerFunc) {
 
 	callback(group{
-		engine: r.engine,
-		path:   path,
+		engine:      r.engine,
+		path:        path,
+		middlewares: middlewares,
 	})
 
 }
 
-func (g group) Group(path string, callback func(group)) {
+func (g group) Group(path string, callback func(group), middlewares ...context.HandlerFunc) {
+
+	//需要注意，父级的中间件在前面
+	g.middlewares = append(g.middlewares, middlewares...)
 
 	g.path += path
 
 	callback(g)
 }
 
-func (g group) Registered(method method, url string, action func(*context.Context) *response.Response) {
+func (g group) Registered(method method, url string, action func(*context.Context) *response.Response, middlewares ...context.HandlerFunc) {
 
-	handlerFunc := convert(action)
+	//父类中间件+当前action中间件+action
+	var handlers = make([]gin.HandlerFunc, len(g.middlewares)+len(middlewares)+1)
+
+	//添加当前action的中间件
+	g.middlewares = append(g.middlewares, middlewares...)
+
+	//将中间件转换为gin.HandlerFunc
+	for key, middleware := range g.middlewares {
+
+		temp := middleware
+
+		handlers[key] = func(c *gin.Context) {
+
+			temp(&context.Context{Context: c})
+		}
+	}
+
+	//添加action
+	handlers[len(g.middlewares)] = convert(action)
 
 	finalUrl := g.path + url
 
@@ -60,23 +83,23 @@ func (g group) Registered(method method, url string, action func(*context.Contex
 
 	case GET:
 
-		g.engine.GET(finalUrl, handlerFunc)
+		g.engine.GET(finalUrl, handlers...)
 
 	case POST:
 
-		g.engine.GET(finalUrl, handlerFunc)
+		g.engine.GET(finalUrl, handlers...)
 
 	case PUT:
 
-		g.engine.PUT(finalUrl, handlerFunc)
+		g.engine.PUT(finalUrl, handlers...)
 
 	case DELETE:
 
-		g.engine.DELETE(finalUrl, handlerFunc)
+		g.engine.DELETE(finalUrl, handlers...)
 
 	case ANY:
 
-		g.engine.Any(finalUrl, handlerFunc)
+		g.engine.Any(finalUrl, handlers...)
 
 	}
 
