@@ -23,6 +23,9 @@ func config(router group) {
 	//})
 
 	router.Registered(GET, "/", controller.Index)
+	router.Registered(GET, "/index2", controller.Index2)
+	router.Registered(GET, "/index3", controller.Index3)
+	router.Registered(GET, "/index4", controller.Index4)
 
 }
 
