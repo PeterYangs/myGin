@@ -9,7 +9,7 @@ import (
 
 func Index(context *context.Context) *response.Response {
 
-	panic("假装错误")
+	//panic("假装错误")
 
 	return response.Resp().String(context.Domain())
 }

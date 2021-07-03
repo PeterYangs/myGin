@@ -10,17 +10,19 @@ import (
 
 func config(router group) {
 
-	router.Group("/api", func(api group) {
+	//router.Group("/api", func(api group) {
+	//
+	//	api.Group("/user", func(user group) {
+	//
+	//		user.Registered(GET, "/info", controller.Index)
+	//		user.Registered(GET, "/order", controller.Index)
+	//		user.Registered(GET, "/money", controller.Index)
+	//
+	//	})
+	//
+	//})
 
-		api.Group("/user", func(user group) {
-
-			user.Registered(GET, "/info", controller.Index)
-			user.Registered(GET, "/order", controller.Index)
-			user.Registered(GET, "/money", controller.Index)
-
-		})
-
-	})
+	router.Registered(GET, "/", controller.Index)
 
 }
 
