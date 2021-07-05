@@ -3,16 +3,24 @@ package controller
 //controller/Index.go
 
 import (
+	"golang.org/x/time/rate"
+	"myGin/component/limiter"
 	"myGin/context"
 	"myGin/response"
 	"strconv"
+	"time"
 )
 
 func Index(context *context.Context) *response.Response {
 
-	context.Session().Set("msg", "php是世界上最好的语言！")
+	l := limiter.NewLimiter(rate.Every(1*time.Second), 1, context.ClientIP())
 
-	return response.Resp().String(context.Domain())
+	if !l.Allow() {
+
+		return response.Resp().String("您的访问过于频繁")
+	}
+
+	return response.Resp().String("success")
 }
 
 func Index2(context *context.Context) *response.Response {
