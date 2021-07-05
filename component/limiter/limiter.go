@@ -77,17 +77,18 @@ func (ls *Limiters) clearLimiter() {
 	for {
 
 		time.Sleep(1 * time.Minute)
-
+		ls.lock.Lock()
 		for i, i2 := range ls.limiters {
 
 			//超过1分钟
 			if time.Now().Unix()-i2.lastGet.Unix() > 60 {
-				ls.lock.Lock()
+
 				delete(ls.limiters, i)
-				ls.lock.Unlock()
+
 			}
 
 		}
+		ls.lock.Unlock()
 
 	}
 
