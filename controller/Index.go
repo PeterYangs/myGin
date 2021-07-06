@@ -25,9 +25,11 @@ func Index(context *context.Context) *response.Response {
 
 func Index2(context *context.Context) *response.Response {
 
-	msg, _ := context.Session().Get("msg")
+	//msg, _ := context.Session().Get("msg")
 
-	return response.Resp().String(msg.(string))
+	//fmt.Println(limiter.GlobalLimiters)
+
+	return response.Resp().String("nice")
 }
 
 func Index3(context *context.Context) *response.Response {

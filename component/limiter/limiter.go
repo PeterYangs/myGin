@@ -9,8 +9,7 @@ import (
 )
 
 type Limiters struct {
-	limiters map[string]*Limiter
-	lock     sync.Mutex
+	limiters *sync.Map
 }
 
 type Limiter struct {
@@ -20,8 +19,7 @@ type Limiter struct {
 }
 
 var GlobalLimiters = &Limiters{
-	limiters: make(map[string]*Limiter),
-	lock:     sync.Mutex{},
+	limiters: &sync.Map{},
 }
 
 var once = sync.Once{}
@@ -49,15 +47,11 @@ func (l *Limiter) Allow() bool {
 
 func (ls *Limiters) getLimiter(r rate.Limit, b int, key string) *Limiter {
 
-	ls.lock.Lock()
-
-	defer ls.lock.Unlock()
-
-	limiter, ok := ls.limiters[key]
+	limiter, ok := ls.limiters.Load(key)
 
 	if ok {
 
-		return limiter
+		return limiter.(*Limiter)
 	}
 
 	l := &Limiter{
@@ -66,7 +60,7 @@ func (ls *Limiters) getLimiter(r rate.Limit, b int, key string) *Limiter {
 		key:     key,
 	}
 
-	ls.limiters[key] = l
+	ls.limiters.Store(key, l)
 
 	return l
 }
@@ -77,18 +71,17 @@ func (ls *Limiters) clearLimiter() {
 	for {
 
 		time.Sleep(1 * time.Minute)
-		ls.lock.Lock()
-		for i, i2 := range ls.limiters {
+
+		ls.limiters.Range(func(key, value interface{}) bool {
 
 			//超过1分钟
-			if time.Now().Unix()-i2.lastGet.Unix() > 60 {
+			if time.Now().Unix()-value.(*Limiter).lastGet.Unix() > 60 {
 
-				delete(ls.limiters, i)
-
+				ls.limiters.Delete(key)
 			}
 
-		}
-		ls.lock.Unlock()
+			return true
+		})
 
 	}
 
