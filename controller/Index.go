@@ -3,8 +3,7 @@ package controller
 //controller/Index.go
 
 import (
-	"golang.org/x/time/rate"
-	"myGin/component/limiter"
+	"myGin/component/lock"
 	"myGin/context"
 	"myGin/response"
 	"strconv"
@@ -13,14 +12,23 @@ import (
 
 func Index(context *context.Context) *response.Response {
 
-	l := limiter.NewLimiter(rate.Every(1*time.Second), 1, context.ClientIP())
+	//l := limiter.NewLimiter(rate.Every(1*time.Second), 1, context.ClientIP())
+	//
+	//if !l.Allow() {
+	//
+	//	return response.Resp().String("您的访问过于频繁")
+	//}
 
-	if !l.Allow() {
+	l := lock.NewLock("test", 100*time.Second)
 
-		return response.Resp().String("您的访问过于频繁")
+	defer l.Release()
+
+	if l.Get() {
+
+		return response.Resp().String("拿锁成功")
 	}
 
-	return response.Resp().String("success")
+	return response.Resp().String("拿锁失败")
 }
 
 func Index2(context *context.Context) *response.Response {
