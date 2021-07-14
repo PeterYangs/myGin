@@ -12,14 +12,7 @@ import (
 
 func Index(context *context.Context) *response.Response {
 
-	//l := limiter.NewLimiter(rate.Every(1*time.Second), 1, context.ClientIP())
-	//
-	//if !l.Allow() {
-	//
-	//	return response.Resp().String("您的访问过于频繁")
-	//}
-
-	l := lock.NewLock("test", 100*time.Second)
+	l := lock.NewLock("test", 10*time.Second)
 
 	defer l.Release()
 
@@ -29,6 +22,22 @@ func Index(context *context.Context) *response.Response {
 	}
 
 	return response.Resp().String("拿锁失败")
+}
+
+func Block(context *context.Context) *response.Response {
+
+	l := lock.NewLock("test", 10*time.Second)
+
+	defer l.Release()
+
+	if l.Block(5 * time.Second) {
+
+		return response.Resp().String("拿锁成功")
+
+	}
+
+	return response.Resp().String("拿锁失败")
+
 }
 
 func Index2(context *context.Context) *response.Response {

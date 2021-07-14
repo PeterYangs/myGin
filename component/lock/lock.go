@@ -38,6 +38,53 @@ func (lk *lock) Get() bool {
 	return ok
 }
 
+// Block 阻塞获取锁
+func (lk *lock) Block(expiration time.Duration) bool {
+
+	t := time.Now()
+
+	for {
+
+		cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+		ok, err := redis.Client().SetNX(cxt, lk.key, lk.requestId, lk.expiration).Result()
+
+		cancel()
+
+		if err != nil {
+
+			return false
+		}
+
+		if ok {
+
+			return true
+		}
+
+		time.Sleep(200 * time.Millisecond)
+
+		if time.Now().Sub(t) > expiration {
+
+			return false
+		}
+
+	}
+
+}
+
+// ForceRelease 强制释放锁，忽略请求id
+func (lk *lock) ForceRelease() error {
+
+	cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	_, err := redis.Client().Del(cxt, lk.key).Result()
+
+	return err
+
+}
+
 // Release 释放锁
 func (lk *lock) Release() error {
 
