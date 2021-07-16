@@ -12,11 +12,13 @@ import (
 
 func Index(context *context.Context) *response.Response {
 
-	l := lock.NewLock("test", 10*time.Second)
+	l := lock.NewLock("test", 1*time.Second)
 
 	defer l.Release()
 
 	if l.Get() {
+
+		time.Sleep(4 * time.Second)
 
 		return response.Resp().String("拿锁成功")
 	}
