@@ -166,19 +166,15 @@ func (lk *lock) ForceRelease() error {
 
 	lk.mu.Lock()
 
-	defer func() {
-
-		lk.mu.Unlock()
-
-		lk.checkCancel <- true
-
-	}()
+	defer lk.mu.Unlock()
 
 	cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer cancel()
 
 	_, err := redis.Client().Del(cxt, lk.key).Result()
+
+	lk.checkCancel <- true
 
 	return err
 
@@ -189,13 +185,7 @@ func (lk *lock) Release() error {
 
 	lk.mu.Lock()
 
-	defer func() {
-
-		lk.mu.Unlock()
-
-		lk.checkCancel <- true
-
-	}()
+	defer lk.mu.Unlock()
 
 	cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
@@ -211,7 +201,12 @@ func (lk *lock) Release() error {
 
 	script := goredis.NewScript(luaScript)
 
-	_, err := script.Run(cxt, redis.Client(), []string{lk.key}, lk.requestId).Result()
+	res, err := script.Run(cxt, redis.Client(), []string{lk.key}, lk.requestId).Result()
+
+	if res.(int64) != 0 {
+
+		lk.checkCancel <- true
+	}
 
 	return err
 
