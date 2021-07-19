@@ -174,7 +174,10 @@ func (lk *lock) ForceRelease() error {
 
 	_, err := redis.Client().Del(cxt, lk.key).Result()
 
-	lk.checkCancel <- true
+	if lk.checkCancel != nil {
+
+		lk.checkCancel <- true
+	}
 
 	return err
 
