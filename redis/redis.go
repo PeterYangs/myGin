@@ -22,7 +22,7 @@ func connectRedis() {
 	defer cancel()
 
 	conf := &redis.Options{
-		Addr: "127.0.0.1:6379",
+		Addr: "192.168.232.128:6379",
 		DB:   0,
 	}
 
